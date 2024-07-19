@@ -12,6 +12,10 @@ commit_folder="$commit_dir/$(echo $timestamp | sed 's/:/./g')"
 
 echo "Creating commit folder: $commit_folder"
 
+# Debug: List contents of current directory
+echo "Current directory contents:"
+ls -la
+
 # Copy all files and directories from the current directory to the commit folder
 echo "Copying files to commit folder..."
 
