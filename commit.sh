@@ -3,60 +3,65 @@
 # Define the directory to store the committed files
 commit_dir="committed_files"
 
-# Create the directory if it doesn't exist
-mkdir -p "$commit_dir"
+# Create a unique timestamp for the commit folder name
+timestamp=$(date +"%H%M%S_%d%m%Y")
+commit_folder="$commit_dir/$(echo $timestamp | sed 's/:/_/g')"
 
-# Get the current date and time to create a unique folder name
-timestamp=$(date +"%H:%M_%d/%m/%Y")
-commit_folder="$commit_dir/$(echo $timestamp | sed 's/:/./g')"
+# Create the commit directory if it doesn't exist
+mkdir -p "$commit_folder"
 
-echo "Creating commit folder: $commit_folder"
-
-# Debug: List contents of current directory
-echo "Current directory contents:"
-ls -la
-
-# Copy all files and directories from the current directory to the commit folder
-echo "Copying files to commit folder..."
-
-# Copy all items (files and directories) to the commit folder
-cp -r . "$commit_folder"
-echo "All files and folders copied to $commit_folder/"
+# Copy all directories (excluding commit.sh and committed_files itself) into commit_folder
+shopt -s extglob
+for dir in */; do
+    # Exclude "committed_files/" and any other specific directories
+    if [[ $dir != "committed_files/" && $dir != "exclude_dir/" ]]; then
+        cp -r "$dir" "$commit_folder"
+    fi
+done
 
 # Navigate to the commit folder
-cd "$commit_folder" 
+cd "$commit_folder" || { echo "Unable to change directory to $commit_folder"; exit 1; }
 
-# Add all files and folders to the Git staging area
-git add .
+# Check if there are any changes to commit
+if git status --porcelain | grep .; then
+    # Add all files and folders to the Git staging area
+    git add .
 
-# Commit the changes
-git commit -m "Auto commit at $timestamp"
+    # Commit the changes
+    git commit -m "Auto commit at $timestamp"
 
-# Stash any unstaged changes before pulling and pushing
-git stash push -m "Stashing unstaged changes for auto commit"
+    # Stash any unstaged changes before pulling and pushing
+    git stash push -m "Stashing unstaged changes for auto commit"
 
-# Attempt to pull changes from the main branch of the remote repository
-echo "Pulling changes from the main branch on GitHub..."
-git pull --rebase https://github.com/aflahmod123/Cinnamon-.git main
+    # Attempt to pull changes from the main branch of the remote repository
+    echo "Pulling changes from the main branch on GitHub..."
+    git pull --rebase https://github.com/aflahmod123/Cinnamon-.git main
 
-if [ $? -eq 0 ]; then
-    # Successfully rebased, now push to main branch
-    git push https://github.com/aflahmod123/Cinnamon-.git main
-    echo "Files committed and pushed to the main branch on GitHub"
+    if [ $? -eq 0 ]; then
+        # Successfully rebased, now push to main branch
+        git push https://github.com/aflahmod123/Cinnamon-.git main
+        echo "Files committed and pushed to the main branch on GitHub"
 
-    # Remove the committed files folder after successful push
-    echo "Cleaning up local files..."
-    rm -rf "$commit_folder"
-    echo "Committed files removed from local drive"
+        # Remove the committed files folder after successful push
+        echo "Cleaning up local files..."
+        cd ../..
+        rm -rf "$commit_folder"
+        echo "Committed files removed from local drive"
 
-    # Apply stashed changes back to working directory
-    git stash pop
+        # Apply stashed changes back to working directory
+        git stash pop
+    else
+        # Rebase failed due to conflicts, inform user
+        echo "Failed to push changes due to conflicts. Resolve conflicts manually."
+        # Restore stashed changes to working directory
+        git stash apply stash@{0}
+    fi
 else
-    # Rebase failed due to conflicts, inform user
-    echo "Failed to push changes due to conflicts. Resolve conflicts manually."
-    # Restore stashed changes to working directory
-    git stash apply stash@{0}
+    echo "No changes to commit."
+    cd ../..
+    rm -rf "$commit_folder"
+    echo "Removed empty commit folder."
 fi
 
 # Pause for 5 seconds before script completes
-sleep 5
+sleep 50
