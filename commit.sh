@@ -20,7 +20,7 @@ cp -vr . "$commit_folder"
 echo "All files and folders copied to $commit_folder/"
 
 # Navigate to the commit folder
-cd "$commit_folder" 
+cd "$commit_folder"
 
 # Add all files and folders to the Git staging area
 git add .
@@ -41,9 +41,9 @@ if [ $? -eq 0 ]; then
     echo "Files committed and pushed to the main branch on GitHub"
 
     # Remove the committed files folder after successful push
-    echo "Cleaning up..."
+    echo "Cleaning up local files..."
     rm -rf "$commit_folder"
-    echo "Committed files removed from $commit_folder"
+    echo "Committed files removed from local drive"
 
     # Apply stashed changes back to working directory
     git stash pop
@@ -55,4 +55,4 @@ else
 fi
 
 # Pause for 5 seconds before script completes
-sleep 50
+sleep 5
