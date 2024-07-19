@@ -16,11 +16,11 @@ echo "Creating commit folder: $commit_folder"
 echo "Copying files to commit folder..."
 
 # Copy all items (files and directories) to the commit folder
-cp -vr . "$commit_folder"
+cp -r . "$commit_folder"
 echo "All files and folders copied to $commit_folder/"
 
 # Navigate to the commit folder
-cd "$commit_folder"
+cd "$commit_folder" 
 
 # Add all files and folders to the Git staging area
 git add .
