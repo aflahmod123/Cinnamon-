@@ -1,67 +1,60 @@
 #!/bin/bash
 
-# Define the directory to store the committed files
+# directory
 commit_dir="committed_files"
 
-# Create a unique timestamp for the commit folder name
-timestamp=$(date +"%H%M%S_%d%m%Y")
-commit_folder="$commit_dir/$(echo $timestamp | sed 's/:/_/g')"
+# Version control variant easier with timestamps
+timestamp=$(date +"%H, %M, %S, %m/%d/%Y")
+commit_folder="$commit_dir/$timestamp"
 
-# Create the commit directory if it doesn't exist
+
 mkdir -p "$commit_folder"
 
-# Copy all directories (excluding commit.sh and committed_files itself) into commit_folder
 shopt -s extglob
 for dir in */; do
-    # Exclude "committed_files/" and any other specific directories
     if [[ $dir != "committed_files/" && $dir != "exclude_dir/" ]]; then
         cp -r "$dir" "$commit_folder"
     fi
 done
 
-# Navigate to the commit folder
-cd "$commit_folder" || { echo "Unable to change directory to $commit_folder"; exit 1; }
+cd "$commit_folder" || { echo "unable to change directory to $commit_folder"; exit 1; }
 
-# Check if there are any changes to commit
 if git status --porcelain | grep .; then
-    # Add all files and folders to the Git staging area
     git add .
 
-    # Commit the changes
-    git commit -m "Auto commit at $timestamp"
+    # Comingt the changes at the gvie n timepsatm
+    git commit -m " committed at $timestamp"
 
-    # Stash any unstaged changes before pulling and pushing
-    git stash push -m "Stashing unstaged changes for auto commit"
+    git stash push -m "stashing the unstaged changes for auto commit"
 
-    # Attempt to pull changes from the main branch of the remote repository
-    echo "Pulling changes from the main branch on GitHub..."
+    
+    echo "pulling any changes from github"
     git pull --rebase https://github.com/aflahmod123/Cinnamon-.git main
 
     if [ $? -eq 0 ]; then
-        # Successfully rebased, now push to main branch
+        # rebased so can continue
         git push https://github.com/aflahmod123/Cinnamon-.git main
-        echo "Files committed and pushed to the main branch on GitHub"
+        echo "files have been commited and pushed to the main folder"
 
-        # Remove the committed files folder after successful push
-        echo "Cleaning up local files..."
+        # Gotta remove the stuff because less anoy
+        echo "cleaning up the local files"
         cd ../..
         rm -rf "$commit_folder"
-        echo "Committed files removed from local drive"
+        echo "the commited fiels have been removed from the drive"
 
-        # Apply stashed changes back to working directory
         git stash pop
     else
-        # Rebase failed due to conflicts, inform user
-        echo "Failed to push changes due to conflicts. Resolve conflicts manually."
+        # Rebase failed so give error yes
+        echo "failed to pus ht the changes fix it yourself"
         # Restore stashed changes to working directory
         git stash apply stash@{0}
     fi
 else
-    echo "No changes to commit."
+    echo "no changes to commit"
     cd ../..
     rm -rf "$commit_folder"
-    echo "Removed empty commit folder."
+    echo "removed the empty folder"
 fi
 
-# Pause for 5 seconds before script completes
+# Pause for 50 seconds before script completes so can locate errors
 sleep 50
